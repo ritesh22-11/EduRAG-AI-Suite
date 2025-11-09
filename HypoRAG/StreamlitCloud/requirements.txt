@@ -1,0 +1,10 @@
+streamlit
+sentence-transformers
+faiss-cpu
+huggingface-hub
+huggingface_hub
+numpy
+PyPDF2
+python-dotenv
+langchain-community
+langchain-huggingface
