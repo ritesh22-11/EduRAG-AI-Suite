@@ -1,7 +1,0 @@
-streamlit
-numpy
-pickle-mixin
-sentence-transformers
-transformers
-accelerate
-torch
