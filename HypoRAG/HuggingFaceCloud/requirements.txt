@@ -1,0 +1,14 @@
+pip>=23.2
+setuptools>=68.0
+wheel
+numpy==1.24.4
+transformers
+sentence-transformers
+torch
+faiss-cpu
+gradio
+PyMuPDF
+python-docx
+datasets
+gTTS
+accelerate
