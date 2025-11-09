@@ -1,14 +1,26 @@
+# Core setup tools
 pip>=23.2
 setuptools>=68.0
 wheel
+
+# Core dependencies
 numpy==1.24.4
-transformers
-sentence-transformers
-torch
+torch>=2.1.0
+transformers>=4.45.0
+sentence-transformers>=3.0.1
 faiss-cpu
-gradio
-PyMuPDF
-python-docx
-datasets
-gTTS
-accelerate
+gradio>=4.41.0
+huggingface-hub>=0.24.6
+accelerate>=0.33.0
+
+# File handling
+PyMuPDF>=1.23.5
+python-docx>=0.8.11
+
+# Audio (speech recognition + synthesis)
+gTTS>=2.5.1
+datasets>=3.0.0
+
+# Optional stability utilities
+soundfile
+pydub
