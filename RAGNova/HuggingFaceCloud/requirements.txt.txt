@@ -1,0 +1,25 @@
+# Core App Framework
+streamlit==1.39.0
+
+# PDF Parsing
+PyMuPDF==1.24.10
+
+# Retrieval and Vector Search
+faiss-cpu==1.8.0.post1
+rank-bm25==0.2.2
+sentence-transformers==3.1.1
+
+# LLM and Hugging Face
+transformers==4.45.2
+accelerate==1.0.1
+huggingface_hub==0.25.2
+
+# Deep Learning Backend
+torch>=2.4.0
+
+# Utilities
+numpy>=1.26.4
+scipy>=1.14.1
+
+# Optional (helps with reproducibility, caching, and logging)
+tqdm>=4.66.5
