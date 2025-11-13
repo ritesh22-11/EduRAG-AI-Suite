@@ -1,6 +1,5 @@
 import streamlit as st
 from pathlib import Path
-import pickle
 from huggingface_hub import InferenceClient
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -13,7 +12,7 @@ st.set_page_config(page_title="Fusion RAG Chatbot", page_icon="🤖", layout="ce
 st.title("🤖 Fusion RAG Chatbot")
 
 # =========================================================
-# PATHS / CONSTANTS
+# CONSTANTS
 # =========================================================
 HF_TOKEN = st.secrets["HF_TOKEN"]
 APP_DIR = Path(__file__).resolve().parent
@@ -24,11 +23,10 @@ LLM_MODEL = "google/gemma-2-9b"
 INDEX_NAME = "index"
 
 # =========================================================
-# CACHED RESOURCES (SAFE)
+# CACHED RESOURCES — SAFE
 # =========================================================
 @st.cache_resource
 def load_embeddings():
-    """Load embedding model ONCE globally."""
     return HuggingFaceEmbeddings(
         model_name=EMBED_MODEL,
         model_kwargs={"device": "cpu"}
@@ -36,36 +34,34 @@ def load_embeddings():
 
 @st.cache_resource
 def get_hf_client():
-    """Load HF inference client once."""
     return InferenceClient(model=LLM_MODEL, token=HF_TOKEN)
 
 # =========================================================
-# FAISS LOADING / FALLBACK HANDLING
+# FAISS LOADING 
 # =========================================================
 def load_faiss_or_fallback():
-    """Load FAISS index or fallback if missing."""
-    emb = load_embeddings()  # load inside, NOT passed as argument
+    emb = load_embeddings()
 
     faiss_path = FAISS_DIR / f"{INDEX_NAME}.faiss"
-    meta_path = FAISS_DIR / "index_meta.pkl"
+    pkl_path = FAISS_DIR / f"{INDEX_NAME}.pkl"
 
-    if faiss_path.exists() and meta_path.exists():
+    if faiss_path.exists() and pkl_path.exists():
         # Load FAISS index
-        faiss_db = FAISS.load_local(
+        db = FAISS.load_local(
             folder_path=str(FAISS_DIR),
             embeddings=emb,
             index_name=INDEX_NAME,
             allow_dangerous_deserialization=True
         )
 
-        # Load text metadata
-        with open(meta_path, "rb") as f:
-            meta = pickle.load(f)
+        # Extract text from FAISS internal docstore
+        texts = []
+        for doc_id in db.index_to_docstore_id.values():
+            doc = db.docstore.search(doc_id)
+            texts.append(doc.page_content)
 
-        texts = [m["text"] for m in meta]
         bm25 = BM25Okapi([t.split() for t in texts])
-
-        return faiss_db, bm25, texts
+        return db, bm25, texts
 
     else:
         st.warning("⚠️ No FAISS index found. Using fallback documents.")
@@ -76,24 +72,18 @@ def load_faiss_or_fallback():
             "This is a fallback document when no FAISS index is found."
         ]
 
-        # Create FAISS from fallback
         db = FAISS.from_texts(fallback_texts, emb)
-
-        # Save fallback index
-        db.save_local(str(FAISS_DIR), index_name=INDEX_NAME)
-        with open(FAISS_DIR / "index_meta.pkl", "wb") as f:
-            pickle.dump([{"text": t} for t in fallback_texts], f)
+        db.save_local(str(FAISS_DIR), INDEX_NAME)
 
         bm25 = BM25Okapi([t.split() for t in fallback_texts])
         return db, bm25, fallback_texts
 
 @st.cache_resource
 def load_faiss_index():
-    """Cache FAISS loading without passing unhashable objects."""
     return load_faiss_or_fallback()
 
 # =========================================================
-# LOAD RESOURCES
+# LOAD GLOBALS
 # =========================================================
 db, bm25, stored_texts = load_faiss_index()
 retriever = db.as_retriever(search_kwargs={"k": 4})
@@ -130,9 +120,7 @@ def fusion_rag_answer(query):
     context = "\n\n".join(top_passages)
 
     prompt = f"""
-You are my study buddy. Use the context strictly.
-
-If answer is not in context, say:
+Use the context ONLY. If answer is not in context, say:
 "The context does not provide this information."
 
 Context:
@@ -150,12 +138,9 @@ Final Answer:
         do_sample=False
     )
 
-    # Extract output
     text = response.get("generated_text", "") if isinstance(response, dict) else str(response)
-
     if "Final Answer:" in text:
         return text.split("Final Answer:", 1)[-1].strip()
-
     return text.strip()
 
 # =========================================================
