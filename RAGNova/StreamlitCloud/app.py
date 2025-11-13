@@ -82,7 +82,7 @@ client = get_hf_client(model_choice)
 # FAISS HELPERS
 # =============================================================================
 def faiss_paths() -> Tuple[Path, Path]:
-    return FAISS_DIR / "index.faiss", FAISS_DIR / "index_meta.pkl"
+    return FAISS_DIR / "index.faiss", FAISS_DIR / "index.pkl"
 
 
 def faiss_exists():
@@ -104,7 +104,7 @@ def load_faiss_index():
     )
 
     # Load metadata text
-    meta_path = FAISS_DIR / "index_meta.pkl"
+    meta_path = FAISS_DIR / "index.pkl"
     with open(meta_path, "rb") as f:
         meta = pickle.load(f)
     texts = [m["text"] for m in meta]
@@ -277,3 +277,4 @@ for q, a, ctx in reversed(st.session_state.chat):
         for c in ctx:
             st.write(c[:1000] + ("..." if len(c) > 1000 else ""))
     st.markdown("---")
+
