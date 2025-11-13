@@ -24,10 +24,11 @@ LLM_MODEL = "google/gemma-2-9b"
 INDEX_NAME = "index"
 
 # =========================================================
-# CACHED RESOURCES
+# CACHED RESOURCES (SAFE)
 # =========================================================
 @st.cache_resource
 def load_embeddings():
+    """Load embedding model ONCE globally."""
     return HuggingFaceEmbeddings(
         model_name=EMBED_MODEL,
         model_kwargs={"device": "cpu"}
@@ -35,18 +36,21 @@ def load_embeddings():
 
 @st.cache_resource
 def get_hf_client():
+    """Load HF inference client once."""
     return InferenceClient(model=LLM_MODEL, token=HF_TOKEN)
 
 # =========================================================
 # FAISS LOADING / FALLBACK HANDLING
 # =========================================================
-def load_faiss_or_fallback(emb):
-    """Loads FAISS index if available, otherwise creates simple fallback."""
+def load_faiss_or_fallback():
+    """Load FAISS index or fallback if missing."""
+    emb = load_embeddings()  # load inside, NOT passed as argument
+
     faiss_path = FAISS_DIR / f"{INDEX_NAME}.faiss"
-    meta_path = FAISS_DIR / "index.pkl"
+    meta_path = FAISS_DIR / "index_meta.pkl"
 
     if faiss_path.exists() and meta_path.exists():
-        # --- Load FAISS ---
+        # Load FAISS index
         faiss_db = FAISS.load_local(
             folder_path=str(FAISS_DIR),
             embeddings=emb,
@@ -54,7 +58,7 @@ def load_faiss_or_fallback(emb):
             allow_dangerous_deserialization=True
         )
 
-        # Load metadata
+        # Load text metadata
         with open(meta_path, "rb") as f:
             meta = pickle.load(f)
 
@@ -64,17 +68,18 @@ def load_faiss_or_fallback(emb):
         return faiss_db, bm25, texts
 
     else:
-        # --- Create fallback index ---
-        st.warning("No FAISS index found. Using fallback documents.")
+        st.warning("⚠️ No FAISS index found. Using fallback documents.")
+
         fallback_texts = [
             "Fusion RAG retrieves documents with multiple queries.",
             "Reciprocal Rank Fusion merges results for better accuracy.",
             "This is a fallback document when no FAISS index is found."
         ]
 
+        # Create FAISS from fallback
         db = FAISS.from_texts(fallback_texts, emb)
 
-        # Save index for future reuse
+        # Save fallback index
         db.save_local(str(FAISS_DIR), index_name=INDEX_NAME)
         with open(FAISS_DIR / "index_meta.pkl", "wb") as f:
             pickle.dump([{"text": t} for t in fallback_texts], f)
@@ -83,14 +88,14 @@ def load_faiss_or_fallback(emb):
         return db, bm25, fallback_texts
 
 @st.cache_resource
-def load_faiss_index(emb):
-    return load_faiss_or_fallback(emb)
+def load_faiss_index():
+    """Cache FAISS loading without passing unhashable objects."""
+    return load_faiss_or_fallback()
 
 # =========================================================
 # LOAD RESOURCES
 # =========================================================
-embeddings = load_embeddings()
-db, bm25, stored_texts = load_faiss_index(embeddings)
+db, bm25, stored_texts = load_faiss_index()
 retriever = db.as_retriever(search_kwargs={"k": 4})
 client = get_hf_client()
 
@@ -145,13 +150,12 @@ Final Answer:
         do_sample=False
     )
 
-    if isinstance(response, dict):
-        text = response.get("generated_text", "")
-    else:
-        text = str(response)
+    # Extract output
+    text = response.get("generated_text", "") if isinstance(response, dict) else str(response)
 
     if "Final Answer:" in text:
         return text.split("Final Answer:", 1)[-1].strip()
+
     return text.strip()
 
 # =========================================================
@@ -173,4 +177,3 @@ if st.session_state.chat_history:
         st.markdown(f"**Q{i}:** {chat['question']}")
         st.markdown(f"**A{i}:** {chat['answer']}")
         st.markdown("---")
-
