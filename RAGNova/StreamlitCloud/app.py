@@ -19,7 +19,7 @@ APP_DIR = Path(__file__).resolve().parent
 FAISS_DIR = APP_DIR / "faiss_index"
 
 EMBED_MODEL = "sentence-transformers/sentence-t5-large"
-LLM_MODEL = "google/gemma-2-9b"
+LLM_MODEL = "microsoft/Phi-3-mini-4k-instruct"
 INDEX_NAME = "index"
 
 # =========================================================
@@ -162,3 +162,4 @@ if st.session_state.chat_history:
         st.markdown(f"**Q{i}:** {chat['question']}")
         st.markdown(f"**A{i}:** {chat['answer']}")
         st.markdown("---")
+
