@@ -43,7 +43,7 @@ def get_hf_client():
 def load_faiss_or_fallback(emb):
     """Loads FAISS index if available, otherwise creates simple fallback."""
     faiss_path = FAISS_DIR / f"{INDEX_NAME}.faiss"
-    meta_path = FAISS_DIR / "index_meta.pkl"
+    meta_path = FAISS_DIR / "index.pkl"
 
     if faiss_path.exists() and meta_path.exists():
         # --- Load FAISS ---
@@ -173,3 +173,4 @@ if st.session_state.chat_history:
         st.markdown(f"**Q{i}:** {chat['question']}")
         st.markdown(f"**A{i}:** {chat['answer']}")
         st.markdown("---")
+
