@@ -72,7 +72,7 @@ def main():
 
     OUT_DIR.mkdir(exist_ok=True)
     idx_path = OUT_DIR / "index.faiss"
-    meta_path = OUT_DIR / "index_meta.pkl"
+    meta_path = OUT_DIR / "index.pkl"
 
     print(f"Saving FAISS index to {idx_path} and metadata to {meta_path} ...")
     faiss.write_index(index, str(idx_path))
@@ -86,3 +86,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
