@@ -1,12 +1,10 @@
 # Core framework
 streamlit==1.39.0
 
-# LLM & Hugging Face Hub
+# Hugging Face Inference API (does NOT require torch)
 huggingface_hub==0.25.2
-transformers==4.45.2
-accelerate==1.0.1
 
-# LangChain + Integrations
+# LangChain ecosystem
 langchain-community==0.3.4
 langchain-huggingface==0.1.2
 
@@ -22,5 +20,5 @@ PyPDF2==3.0.1
 numpy>=1.26.4
 scipy>=1.14.1
 
-# Optional (progress bars, logging)
+# Optional helper packages
 tqdm>=4.66.5
