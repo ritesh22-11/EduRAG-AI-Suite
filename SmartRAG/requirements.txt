@@ -1,0 +1,8 @@
+streamlit
+sentence-transformers
+faiss-cpu
+rank-bm25
+numpy
+pymupdf
+huggingface_hub
+transformers
