@@ -11,15 +11,13 @@ try:
 except Exception as e:
     faiss = None
 
-# Hugging Face inference client is optional if the user wants to use HF Inference
+
 try:
     from huggingface_hub import InferenceClient
 except Exception:
     InferenceClient = None
 
-# =========================================================
 # STREAMLIT CONFIG
-# =========================================================
 st.set_page_config(page_title="SmartRAG – Advanced RAG Chatbot (Free Deployment)", page_icon="🤖", layout="wide")
 st.markdown("""
 <style>
@@ -37,7 +35,7 @@ st.sidebar.title("⚙️ Settings")
 MODEL_CHOICE = st.sidebar.selectbox(
     "Choose LLM",
     [
-        "mistral-7b-instruct-v0.3",
+        "mistralai/Mistral-7B-Instruct-v0.3",
         "microsoft/phi-3-mini-4k-instruct",
         "google/gemma-2-2b-it",
     ], index=0,
@@ -302,3 +300,4 @@ else:
 
 # ====== Footer ======
 st.caption("SmartRAG — uses SentenceTransformers + optional HF Inference. Add HF token under Streamlit Secrets (HF_TOKEN).")
+
