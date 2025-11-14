@@ -1,8 +1,8 @@
 streamlit
-sentence-transformers
-faiss-cpu
-rank-bm25
-numpy
 pymupdf
-huggingface_hub
-transformers
+numpy
+faiss-cpu
+sentence-transformers
+rank-bm25
+huggingface-hub
+torch
